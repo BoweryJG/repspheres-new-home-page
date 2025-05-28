@@ -616,9 +616,16 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
         // Gentler scroll response with bounds checking
         const scrollOffset = Math.max(-50, Math.min(50, scrollPositionRef.current * -0.08));
         
-        // Subtle floating motion
-        const floatX = Math.sin(now * 0.0001) * 15 + Math.cos(now * 0.00015) * 10;
-        const floatY = Math.cos(now * 0.00012) * 10 + Math.sin(now * 0.00008) * 8;
+        // Enhanced floating motion with larger movement area
+        const titleStartY = vh * 0.15; // Where title starts
+        const availableHeight = titleStartY - navbarHeight - parentRadius * 2;
+        const availableWidth = vw * 0.5; // Use more horizontal space
+        
+        // Complex floating pattern for interesting movement
+        const floatX = Math.sin(now * 0.00008) * availableWidth * 0.3 + 
+                      Math.cos(now * 0.00012) * availableWidth * 0.2;
+        const floatY = Math.sin(now * 0.00009) * availableHeight * 0.3 + 
+                      Math.cos(now * 0.00014) * availableHeight * 0.2;
         
         const px = parentCenterBaseRef.current.x + 
                    floatX +
@@ -632,15 +639,22 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
                          parentVelocityRef.current.y +
                          scrollOffset;
         
-        // Allow orb to move freely, including overlapping navbar
-        const safeMinY = parentRadius; // Only prevent going off screen
-        const py = Math.max(safeMinY, proposedY);
+        // Keep orb within the space between navbar and title
+        const minY = navbarHeight + parentRadius;
+        const maxY = titleStartY - parentRadius;
+        const py = Math.max(minY, Math.min(maxY, proposedY));
         
         parentCenterRef.current = { x: px, y: py };
 
         const parentR = (parentRadius + parentDrag * 0.15) * scale;
         const parentAmp = (1 + Math.abs(parentDrag) * 0.008) * scale * 0.5; // More spherical parent orb
-        const parentPath = generateSuperSmoothBlob(px + parentDx * scale, py + parentDy * scale, parentR, parentPoints, parentMorphT, parentAmp);
+        // Store actual center position for lightning strikes
+        const parentActualX = px + parentDx * scale;
+        const parentActualY = py + parentDy * scale;
+        parentCenterRef.current.actualX = parentActualX;
+        parentCenterRef.current.actualY = parentActualY;
+        
+        const parentPath = generateSuperSmoothBlob(parentActualX, parentActualY, parentR, parentPoints, parentMorphT, parentAmp);
         if (parentOrbRef.current) parentOrbRef.current.setAttribute('d', parentPath);
       }
 
@@ -782,7 +796,12 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
           const lastTransmissionTime = lastTransmissionTimeRef.current[i] || 0;
           
           if (colorSimilarity && now - lastTransmissionTime > 2000) { // Lightning every 2 seconds max
-            createDataTransmission(i, childX, childY, parentX, parentY, childColor);
+            // Use the actual center positions including morph offsets
+            const childActualX = x; // x already includes all offsets
+            const childActualY = y; // y already includes all offsets
+            const parentActualX = parentCenterRef.current.actualX || parentX;
+            const parentActualY = parentCenterRef.current.actualY || parentY;
+            createDataTransmission(i, childActualX, childActualY, parentActualX, parentActualY, childColor);
             lastTransmissionTimeRef.current[i] = now;
           }
           
