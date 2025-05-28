@@ -20,6 +20,7 @@ import MemoryIcon from '@mui/icons-material/Memory';
 import LogoutIcon from '@mui/icons-material/Logout';
 import GoogleIcon from '@mui/icons-material/Google';
 import PersonIcon from '@mui/icons-material/Person';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useOrbContext } from './OrbContextProvider';
 import { useAuth } from '../contexts/AuthContext';
 import Menu from '@mui/material/Menu';
@@ -57,16 +58,16 @@ const getNavLinks = (currentUrl, isAdmin) => {
   const links = [
     { 
       key: 'insights',
-      label: 'AI Visualizer', 
-      href: 'https://aime.netlify.app/',
+      label: 'Market Insights', 
+      href: 'https://marketdata.repspheres.com/',
       icon: <InsightsIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       highlight: true,
-      description: 'AI-powered aesthetic visualization'
+      description: 'Real-time market intelligence'
     },
     { 
       key: 'workspace',
       label: 'Workspace', 
-      href: 'https://workspace.repspheres.com/',
+      href: 'https://workspace-jg.netlify.app/',
       icon: <DashboardIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'Unified sales workflows'
     },
@@ -76,6 +77,20 @@ const getNavLinks = (currentUrl, isAdmin) => {
       href: 'https://crm.repspheres.com/',
       icon: <MemoryIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'AI-powered CRM platform'
+    },
+    {
+      key: 'linguistics',
+      label: 'Linguistics',
+      href: 'https://linguisticsjg.netlify.app/',
+      icon: <LanguageIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
+      description: 'Natural language processing'
+    },
+    {
+      key: 'ai-visualizer',
+      label: 'AI Visualizer',
+      href: 'https://aime.netlify.app/',
+      icon: <AutoAwesomeIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
+      description: 'AI-powered aesthetic visualization'
     },
     {
       key: 'podcast',

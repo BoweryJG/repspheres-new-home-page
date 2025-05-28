@@ -8,12 +8,16 @@ import {
   AutoAwesome,
   Speed,
   Analytics,
-  CloudSync
+  CloudSync,
+  Favorite,
+  OpenInNew
 } from '@mui/icons-material';
+import { DEPLOYMENT_URLS, getDeploymentUrl } from '../config/deployments';
 
 const modules = [
   {
     id: 'market-insights',
+    deploymentKey: 'marketInsights',
     title: 'Market Insights',
     subtitle: 'Real-Time Intelligence Engine',
     description: 'Track market sizes, growth percentages, and breaking news with city-level granularity. 15 years of proprietary data at your fingertips.',
@@ -26,6 +30,23 @@ const modules = [
       'Competitive analysis'
     ],
     gradient: 'linear-gradient(135deg, #00ffc6 0%, #00d4a8 100%)',
+  },
+  {
+    id: 'market-pulse',
+    deploymentKey: 'marketPulse',
+    title: 'Market Pulse Engine™',
+    subtitle: 'Living Market Visualization',
+    description: 'Revolutionary visualization treating markets as living organisms. Interactive body heatmaps, revenue-per-minute calculations, and Florida Effect™ analysis.',
+    icon: Favorite,
+    color: '#ff1744',
+    features: [
+      'Body heatmap visualization',
+      'Revenue/minute calculator',
+      'Market velocity streams',
+      'Opportunity radar'
+    ],
+    gradient: 'linear-gradient(135deg, #ff1744 0%, #d50000 100%)',
+    isNew: true,
   },
   {
     id: 'ai-workspace',
