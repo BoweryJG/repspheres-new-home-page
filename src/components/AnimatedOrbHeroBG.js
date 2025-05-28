@@ -378,45 +378,53 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
       
       // Position between navbar (height ~80px) and title (starts around 15% of viewport)
-      const navbarHeight = 80; // Approximate navbar height
+      const navbarHeight = 40; // Reduced to move orbs higher up
       const titleStartY = vh * 0.15; // Where title starts (from HeroSection pt values)
       
       // Calculate max orbital extent (largest orbit + child radius)
       const maxOrbitalRadius = 95; // Largest orbit from orbital variations
       const totalMaxRadius = maxOrbitalRadius + childRadius + 10; // Add buffer
       
-      // Ensure parent is positioned so orbits don't go above navbar
-      const minY = navbarHeight + totalMaxRadius + 20; // Add extra buffer to ensure no navbar overlap
+      // Position orb in upper right, directly below navbar
+      const minY = navbarHeight + 10; // Small buffer below navbar
       const maxY = titleStartY + 50; // Can go slightly behind title
-      const centerY = Math.max(minY, navbarHeight + (titleStartY - navbarHeight) * 0.7); // Move orb lower
+      
+      // Position orb at navbar level
+      const upperY = navbarHeight - parentRadius; // Position center of orb overlapping with navbar
       
       // Dynamic positioning based on screen size
       const isMobile = vw < 768;
       const isTablet = vw >= 768 && vw < 1024;
       
-      let rightOffset;
+      let xPosition;
       let dynamicScale;
       
       if (isMobile) {
-        rightOffset = 0; // Center on mobile
+        // Center on mobile
+        xPosition = vw * 0.5;
         // Ensure orbs fit within viewport minus navbar
         const availableHeight = vh - navbarHeight - 40; // 40px bottom buffer
         const availableWidth = vw - 40; // 20px margins
         const maxDimension = Math.min(availableWidth, availableHeight);
         dynamicScale = Math.min(0.7, maxDimension / (totalMaxRadius * 2.2));
       } else if (isTablet) {
-        rightOffset = vw * 0.1;
+        // Position to the right on tablet
+        xPosition = vw - parentRadius - 100; // Right side with margin (use parent radius for tighter positioning)
         dynamicScale = 0.85;
       } else {
-        rightOffset = Math.min(200, vw * 0.15);
+        // Position to the right on desktop
+        xPosition = vw - parentRadius - 120; // Right side with margin (use parent radius for tighter positioning)
         dynamicScale = 1;
       }
       
       const finalScale = scale * dynamicScale;
       
-      parentCenterBaseRef.current = { x: vw * 0.5 + rightOffset, y: centerY };
-      parentCenterRef.current = { x: vw * 0.5 + rightOffset, y: centerY };
+      parentCenterBaseRef.current = { x: xPosition, y: upperY };
+      parentCenterRef.current = { x: xPosition, y: upperY };
       orbScaleRef.current = finalScale;
+      
+      // Debug log to verify positioning
+      console.log('Orb positioned at:', { x: xPosition, y: upperY, viewport: { vw, vh }, device: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop' });
     };
 
     adjustSVGSize();
@@ -586,8 +594,8 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
                          parentVelocityRef.current.y +
                          scrollOffset;
         
-        // Ensure orb doesn't go above safe zone (navbar + buffer)
-        const safeMinY = navbarHeight + totalMaxRadius + 20;
+        // Allow orb to move freely, including overlapping navbar
+        const safeMinY = parentRadius; // Only prevent going off screen
         const py = Math.max(safeMinY, proposedY);
         
         parentCenterRef.current = { x: px, y: py };
