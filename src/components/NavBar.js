@@ -59,7 +59,7 @@ const getNavLinks = (currentUrl, isAdmin) => {
     { 
       key: 'insights',
       label: 'Market Insights', 
-      href: 'https://marketdata.repspheres.com/',
+      href: '/insights',
       icon: <InsightsIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       highlight: true,
       description: 'Real-time market intelligence'
@@ -67,28 +67,28 @@ const getNavLinks = (currentUrl, isAdmin) => {
     { 
       key: 'workspace',
       label: 'Workspace', 
-      href: 'https://workspace-jg.netlify.app/',
+      href: '/workspace',
       icon: <DashboardIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'Unified sales workflows'
     },
     { 
       key: 'sphereos',
       label: 'Sphere OS', 
-      href: 'https://crm.repspheres.com/',
+      href: '/crm',
       icon: <MemoryIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'AI-powered CRM platform'
     },
     {
       key: 'linguistics',
       label: 'Linguistics',
-      href: 'https://linguisticsjg.netlify.app/',
+      href: '/linguistics',
       icon: <LanguageIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'Natural language processing'
     },
     {
       key: 'ai-visualizer',
       label: 'AI Visualizer',
-      href: 'https://aime.netlify.app/',
+      href: '/visualizer',
       icon: <AutoAwesomeIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       description: 'AI-powered aesthetic visualization'
     },

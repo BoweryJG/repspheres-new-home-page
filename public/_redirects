@@ -1,0 +1,19 @@
+# Netlify Redirects for RepSpheres Platform
+
+# Market Insights App
+/insights/*  https://marketdata.repspheres.com/:splat  200
+
+# Workspace App  
+/workspace/*  https://workspace-jg.netlify.app/:splat  200
+
+# Linguistics App
+/linguistics/*  https://linguisticsjg.netlify.app/:splat  200
+
+# AI Visualizer
+/visualizer/*  https://aime.netlify.app/:splat  200
+
+# CRM/Sphere OS (when deployed)
+# /crm/*  https://your-crm-app.netlify.app/:splat  200
+
+# Handle client-side routing for the homepage React app
+/*  /index.html  200
