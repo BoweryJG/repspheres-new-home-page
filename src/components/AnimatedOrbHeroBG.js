@@ -50,13 +50,16 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
   const parentVelocityRef = useRef({ x: 0, y: 0 });
   const dataTransmissionsRef = useRef([]);
   const lastTransmissionTimeRef = useRef({});
+  const childOrbitalDisruptionRef = useRef([]);
+  const parentScrollVelocityRef = useRef({ x: 0, y: 0 });
+  const childLagPositionsRef = useRef([]);
 
   const childCount = 5;
   const parentRadius = 30; // Reduced by 20% more (37 * 0.8)
   const childRadius = 11; // Reduced by 20% more (14 * 0.8)
   const parentPoints = 128; // High detail for smooth animation
   const childPoints = 64; // High detail for smooth animation
-  const childAmp = 0.3; // Reduced amplitude for smoother shapes
+  const childAmp = 0.15; // Halfway to spherical - reduced from 0.3
   const orbMorphDirections = [];
   const orbMorphSpeeds = [];
 
@@ -100,9 +103,9 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       const angle = angles[i];
       // Full complexity noise for ethereal effect
       const noise =
-        Math.sin(angle * 3 + t * 0.7 + phase) * 1.5 * amp +
-        Math.sin(angle * 5 - t * 1.1 + phase) * 0.8 * amp +
-        Math.sin(angle * 2 + t * 1.7 + phase) * 0.5 * amp;
+        Math.sin(angle * 3 + t * 0.7 + phase) * 0.75 * amp +
+        Math.sin(angle * 5 - t * 1.1 + phase) * 0.4 * amp +
+        Math.sin(angle * 2 + t * 1.7 + phase) * 0.25 * amp;
       const rad = r + noise;
       pts.push({
         x: cx + cos[i] * rad,
@@ -184,6 +187,7 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       progress: 0,
       color,
       opacity: 0.3, // Very subtle effect
+      isLightning: true
     });
   };
 
@@ -198,36 +202,50 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
     dataTransmissionsRef.current = dataTransmissionsRef.current.filter(t => t.progress < 1);
     
     for (const transmission of dataTransmissionsRef.current) {
-      transmission.progress += 0.02; // Slow transmission speed
+      transmission.progress += 0.08; // Fast lightning strike
       
-      if (transmission.progress < 1) {
-        // Create a subtle lightning path
+      if (transmission.progress < 1 && transmission.isLightning) {
+        // Create a lightning strike effect
         const t = transmission.progress;
-        const midX = transmission.startX + (transmission.endX - transmission.startX) * t;
-        const midY = transmission.startY + (transmission.endY - transmission.startY) * t;
         
-        // Simple line with slight opacity fade
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", transmission.startX);
-        line.setAttribute("y1", transmission.startY);
-        line.setAttribute("x2", midX);
-        line.setAttribute("y2", midY);
-        line.setAttribute("stroke", transmission.color);
-        line.setAttribute("stroke-width", "1");
-        line.setAttribute("opacity", (transmission.opacity * (1 - t * 0.5)).toFixed(2));
-        line.setAttribute("filter", "url(#glow)");
+        // Create jagged lightning path
+        const segments = 5;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        let d = `M${transmission.startX},${transmission.startY}`;
         
-        transmissionsGroup.appendChild(line);
+        for (let seg = 1; seg <= segments; seg++) {
+          const segProgress = (seg / segments) * t;
+          const baseX = transmission.startX + (transmission.endX - transmission.startX) * segProgress;
+          const baseY = transmission.startY + (transmission.endY - transmission.startY) * segProgress;
+          
+          // Add random offset for lightning effect
+          const offset = (1 - segProgress) * 10; // Decreasing offset
+          const offsetX = (Math.random() - 0.5) * offset;
+          const offsetY = (Math.random() - 0.5) * offset;
+          
+          d += ` L${(baseX + offsetX).toFixed(1)},${(baseY + offsetY).toFixed(1)}`;
+        }
         
-        // Small dot at the end
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", midX.toFixed(1));
-        circle.setAttribute("cy", midY.toFixed(1));
-        circle.setAttribute("r", "2");
-        circle.setAttribute("fill", transmission.color);
-        circle.setAttribute("opacity", (transmission.opacity * 2 * (1 - t)).toFixed(2));
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", transmission.color);
+        path.setAttribute("stroke-width", t < 0.5 ? "2" : "1");
+        path.setAttribute("opacity", (transmission.opacity * 2 * (1 - t)).toFixed(2));
+        path.setAttribute("fill", "none");
+        path.setAttribute("filter", "url(#glow)");
         
-        transmissionsGroup.appendChild(circle);
+        transmissionsGroup.appendChild(path);
+        
+        // Bright flash at start
+        if (t < 0.2) {
+          const flash = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          flash.setAttribute("cx", transmission.startX.toFixed(1));
+          flash.setAttribute("cy", transmission.startY.toFixed(1));
+          flash.setAttribute("r", (10 * (1 - t * 5)).toFixed(1));
+          flash.setAttribute("fill", transmission.color);
+          flash.setAttribute("opacity", (0.8 * (1 - t * 5)).toFixed(2));
+          flash.setAttribute("filter", "url(#glow)");
+          transmissionsGroup.appendChild(flash);
+        }
       }
     }
   };
@@ -351,6 +369,9 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
             childState.orbitalSpeed = variation.speed;
             childState.orbitalPhase = i * Math.PI / 3; // Different start phases
             childState.orbitalTilt = 0; // No additional tilt
+            childState.disruptionOffset = { x: 0, y: 0 };
+            childState.returnVelocity = { x: 0, y: 0 };
+            childState.isDisrupted = false;
             // Set targets for organized return
             childState.orbitalTarget = {
               radius: childState.orbitalRadius,
@@ -468,11 +489,28 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
         }
       }
       
-      // Only parent orb responds to scroll - much gentler
+      // Parent orb responds to scroll with unique physics
       const parentState = orbStatesRef.current[0];
       if (parentState) {
-        parentState.dragTarget += scrollVelocityRef.current * 0.3;
-        parentVelocityRef.current.y = scrollVelocityRef.current * 0.15;
+        parentState.dragTarget += scrollVelocityRef.current * 0.5;
+        parentVelocityRef.current.y = scrollVelocityRef.current * 0.3;
+        parentScrollVelocityRef.current.x = scrollVelocityRef.current * 0.1;
+        parentScrollVelocityRef.current.y = scrollVelocityRef.current * 0.25;
+        
+        // Disrupt child orbs based on scroll velocity
+        const disruptionStrength = Math.min(Math.abs(scrollVelocityRef.current) * 0.02, 1);
+        for (let i = 0; i < childCount; i++) {
+          if (Math.abs(scrollVelocityRef.current) > 10) {
+            childOrbitalDisruptionRef.current[i] = {
+              x: (Math.random() - 0.5) * disruptionStrength * 30,
+              y: scrollVelocityRef.current * 0.1
+            };
+            const childState = orbStatesRef.current[i + 1];
+            if (childState) {
+              childState.isDisrupted = true;
+            }
+          }
+        }
       }
     };
 
@@ -601,7 +639,7 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
         parentCenterRef.current = { x: px, y: py };
 
         const parentR = (parentRadius + parentDrag * 0.15) * scale;
-        const parentAmp = (1 + Math.abs(parentDrag) * 0.008) * scale;
+        const parentAmp = (1 + Math.abs(parentDrag) * 0.008) * scale * 0.5; // More spherical parent orb
         const parentPath = generateSuperSmoothBlob(px + parentDx * scale, py + parentDy * scale, parentR, parentPoints, parentMorphT, parentAmp);
         if (parentOrbRef.current) parentOrbRef.current.setAttribute('d', parentPath);
       }
@@ -640,9 +678,32 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
           const state = orbStatesRef.current[i + 1];
           if (!state || orbMorphDirections[i+1] === undefined) continue;
 
-          // Minimal physics for child orbs to reduce interference with orbital motion
+          // Physics for orbital disruption and recovery
           state.drag *= 0.95; // Simple damping
           state.dragTarget = 0;
+          
+          // Handle disruption recovery with spring physics
+          if (state.isDisrupted) {
+            const disruption = childOrbitalDisruptionRef.current[i] || { x: 0, y: 0 };
+            state.disruptionOffset.x += disruption.x;
+            state.disruptionOffset.y += disruption.y;
+            childOrbitalDisruptionRef.current[i] = { x: 0, y: 0 };
+          }
+          
+          // Spring-based return to orbit
+          const returnStiffness = 0.03;
+          const returnDamping = 0.85;
+          state.returnVelocity.x += -state.disruptionOffset.x * returnStiffness;
+          state.returnVelocity.y += -state.disruptionOffset.y * returnStiffness;
+          state.returnVelocity.x *= returnDamping;
+          state.returnVelocity.y *= returnDamping;
+          state.disruptionOffset.x += state.returnVelocity.x;
+          state.disruptionOffset.y += state.returnVelocity.y;
+          
+          // Reset disrupted state when close to orbit
+          if (Math.abs(state.disruptionOffset.x) < 1 && Math.abs(state.disruptionOffset.y) < 1) {
+            state.isDisrupted = false;
+          }
 
           const fam = getDynamicColorFamily(i, now);
           const tcol = 0.5 + 0.5 * Math.sin(now * 0.0005 + i);
@@ -651,6 +712,8 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
           const childGradStop1 = svgRef.current.querySelector(`#c${i}s1`);
           if (childGradStop0) childGradStop0.setAttribute("stop-color", childColor);
           if (childGradStop1) childGradStop1.setAttribute("stop-color", lerpColor(fam[1], fam[0], tcol));
+          
+          // Color matching check will be done after position calculation
           
           // Use fixed angle for each child since CSS handles rotation
           const angle = state.initialAngle || (i * 2 * Math.PI / childCount);
@@ -691,9 +754,37 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
           const parentX = parentCenterRef.current.x + parentDx * scale;
           const parentY = parentCenterRef.current.y + parentDy * scale;
           
-          // Position child relative to parent's actual position
-          const childX = parentX + finalX * scale3D * (orbScaleRef.current || 1);
-          const childY = parentY + finalY * scale3D * (orbScaleRef.current || 1);
+          // Initialize lag positions if needed
+          if (!childLagPositionsRef.current[i]) {
+            childLagPositionsRef.current[i] = { x: 0, y: 0 };
+          }
+          
+          // Target position with disruption offset
+          const targetX = finalX * scale3D * (orbScaleRef.current || 1) + state.disruptionOffset.x;
+          const targetY = finalY * scale3D * (orbScaleRef.current || 1) + state.disruptionOffset.y;
+          
+          // Apply lag to child movement relative to parent
+          const lagFactor = 0.85; // How much the child lags behind (0.85 = 15% lag)
+          childLagPositionsRef.current[i].x += (targetX - childLagPositionsRef.current[i].x) * (1 - lagFactor);
+          childLagPositionsRef.current[i].y += (targetY - childLagPositionsRef.current[i].y) * (1 - lagFactor);
+          
+          // Position child with lag relative to parent's actual position
+          const childX = parentX + childLagPositionsRef.current[i].x;
+          const childY = parentY + childLagPositionsRef.current[i].y;
+          
+          // Check for color matching and create lightning strike
+          const parentFam = getDynamicColorFamily(0, now);
+          const parentTcol = 0.5 + 0.5 * Math.sin(now * 0.0002);
+          const parentColor = lerpColor(parentFam[0], parentFam[1], parentTcol);
+          
+          // Simple color similarity check
+          const colorSimilarity = Math.abs(parseInt(childColor.slice(1, 3), 16) - parseInt(parentColor.slice(1, 3), 16)) < 20;
+          const lastTransmissionTime = lastTransmissionTimeRef.current[i] || 0;
+          
+          if (colorSimilarity && now - lastTransmissionTime > 2000) { // Lightning every 2 seconds max
+            createDataTransmission(i, childX, childY, parentX, parentY, childColor);
+            lastTransmissionTimeRef.current[i] = now;
+          }
           
           // Store 3D position
           state.position.z = finalZ;
@@ -729,7 +820,7 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
           const depthOpacity = scale3D * 0.7 + 0.3; // Keep minimum 30% opacity
           
           const cR = (childRadius + state.drag * 0.08) * scale * depthScale;
-          const currentChildAmp = (childAmp + Math.abs(state.drag) * 0.006) * scale * depthScale;
+          const currentChildAmp = (childAmp + Math.abs(state.drag) * 0.006) * scale * depthScale; // Already reduced childAmp
           const morphT = now * 0.0002 + i * 10; // Slower morphing
           
           const childPath = generateSuperSmoothBlob(x, y, cR, childPoints, morphT, currentChildAmp, i);
