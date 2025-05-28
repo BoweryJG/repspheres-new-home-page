@@ -186,7 +186,7 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       endY: parentY,
       progress: 0,
       color,
-      opacity: 0.3, // Very subtle effect
+      opacity: 0.2, // Even more subtle
       isLightning: true
     });
   };
@@ -202,50 +202,49 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
     dataTransmissionsRef.current = dataTransmissionsRef.current.filter(t => t.progress < 1);
     
     for (const transmission of dataTransmissionsRef.current) {
-      transmission.progress += 0.08; // Fast lightning strike
+      transmission.progress += 0.04; // Slower, more visible lightning
       
       if (transmission.progress < 1 && transmission.isLightning) {
         // Create a lightning strike effect
         const t = transmission.progress;
         
-        // Create jagged lightning path
-        const segments = 5;
+        // Create subtle lightning path from child to parent
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        
+        // Calculate the full path from start to end
+        const dx = transmission.endX - transmission.startX;
+        const dy = transmission.endY - transmission.startY;
+        
+        // Create a jagged path with 3-4 segments
+        const segments = 3 + Math.floor(Math.random() * 2);
         let d = `M${transmission.startX},${transmission.startY}`;
         
-        for (let seg = 1; seg <= segments; seg++) {
-          const segProgress = (seg / segments) * t;
-          const baseX = transmission.startX + (transmission.endX - transmission.startX) * segProgress;
-          const baseY = transmission.startY + (transmission.endY - transmission.startY) * segProgress;
+        for (let i = 1; i < segments; i++) {
+          const progress = i / segments;
+          const baseX = transmission.startX + dx * progress;
+          const baseY = transmission.startY + dy * progress;
           
-          // Add random offset for lightning effect
-          const offset = (1 - segProgress) * 10; // Decreasing offset
-          const offsetX = (Math.random() - 0.5) * offset;
-          const offsetY = (Math.random() - 0.5) * offset;
+          // Small perpendicular offset for zigzag effect
+          const perpX = -dy / Math.sqrt(dx * dx + dy * dy);
+          const perpY = dx / Math.sqrt(dx * dx + dy * dy);
+          const zigzag = (Math.random() - 0.5) * 15; // Subtle zigzag
           
-          d += ` L${(baseX + offsetX).toFixed(1)},${(baseY + offsetY).toFixed(1)}`;
+          d += ` L${(baseX + perpX * zigzag).toFixed(1)},${(baseY + perpY * zigzag).toFixed(1)}`;
         }
+        
+        // End at parent center
+        d += ` L${transmission.endX},${transmission.endY}`;
         
         path.setAttribute("d", d);
         path.setAttribute("stroke", transmission.color);
-        path.setAttribute("stroke-width", t < 0.5 ? "2" : "1");
-        path.setAttribute("opacity", (transmission.opacity * 2 * (1 - t)).toFixed(2));
+        path.setAttribute("stroke-width", "1");
+        path.setAttribute("opacity", (transmission.opacity * (1 - t * 0.8)).toFixed(2)); // More subtle fade
         path.setAttribute("fill", "none");
         path.setAttribute("filter", "url(#glow)");
         
         transmissionsGroup.appendChild(path);
         
-        // Bright flash at start
-        if (t < 0.2) {
-          const flash = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          flash.setAttribute("cx", transmission.startX.toFixed(1));
-          flash.setAttribute("cy", transmission.startY.toFixed(1));
-          flash.setAttribute("r", (10 * (1 - t * 5)).toFixed(1));
-          flash.setAttribute("fill", transmission.color);
-          flash.setAttribute("opacity", (0.8 * (1 - t * 5)).toFixed(2));
-          flash.setAttribute("filter", "url(#glow)");
-          transmissionsGroup.appendChild(flash);
-        }
+        // No flash - keep it subtle
       }
     }
   };
@@ -410,8 +409,10 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       const minY = navbarHeight + 10; // Small buffer below navbar
       const maxY = titleStartY + 50; // Can go slightly behind title
       
-      // Position orb at navbar level
-      const upperY = navbarHeight - parentRadius; // Position center of orb overlapping with navbar
+      // Calculate available space and random starting position
+      const minY = navbarHeight + parentRadius;
+      const maxY = titleStartY - parentRadius;
+      const randomY = minY + Math.random() * (maxY - minY);
       
       // Dynamic positioning based on screen size
       const isMobile = vw < 768;
@@ -421,31 +422,37 @@ const AnimatedOrbHeroBG = ({ zIndex = 0, sx = {}, style = {}, className = "" }) 
       let dynamicScale;
       
       if (isMobile) {
-        // Center on mobile
-        xPosition = vw * 0.5;
+        // Random position on mobile within available width
+        const minX = parentRadius + 20;
+        const maxX = vw - parentRadius - 20;
+        xPosition = minX + Math.random() * (maxX - minX);
         // Ensure orbs fit within viewport minus navbar
         const availableHeight = vh - navbarHeight - 40; // 40px bottom buffer
         const availableWidth = vw - 40; // 20px margins
         const maxDimension = Math.min(availableWidth, availableHeight);
         dynamicScale = Math.min(0.7, maxDimension / (totalMaxRadius * 2.2));
       } else if (isTablet) {
-        // Position to the right on tablet
-        xPosition = vw - parentRadius - 100; // Right side with margin (use parent radius for tighter positioning)
+        // Random position on tablet favoring right side
+        const minX = vw * 0.4;
+        const maxX = vw - parentRadius - 100;
+        xPosition = minX + Math.random() * (maxX - minX);
         dynamicScale = 0.85;
       } else {
-        // Position to the right on desktop
-        xPosition = vw - parentRadius - 120; // Right side with margin (use parent radius for tighter positioning)
+        // Random position on desktop favoring right side
+        const minX = vw * 0.5;
+        const maxX = vw - parentRadius - 120;
+        xPosition = minX + Math.random() * (maxX - minX);
         dynamicScale = 1;
       }
       
       const finalScale = scale * dynamicScale;
       
-      parentCenterBaseRef.current = { x: xPosition, y: upperY };
-      parentCenterRef.current = { x: xPosition, y: upperY };
+      parentCenterBaseRef.current = { x: xPosition, y: randomY };
+      parentCenterRef.current = { x: xPosition, y: randomY };
       orbScaleRef.current = finalScale;
       
       // Debug log to verify positioning
-      console.log('Orb positioned at:', { x: xPosition, y: upperY, viewport: { vw, vh }, device: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop' });
+      console.log('Orb positioned at:', { x: xPosition, y: randomY, viewport: { vw, vh }, device: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop' });
     };
 
     adjustSVGSize();

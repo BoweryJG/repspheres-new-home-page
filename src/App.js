@@ -5,7 +5,6 @@ import HeroSection from './components/HeroSection';
 import PhilosophicalOpenerSection from './components/PhilosophicalOpenerSection';
 import CrossroadsSection from './components/CrossroadsSection';
 import DataRichnessSection from './components/DataRichnessSection';
-import AIVisualizerSection from './components/AIVisualizerSection';
 import SystemArchitectsSection from './components/SystemArchitectsSection';
 import SocraticMethodSection from './components/SocraticMethodSection';
 import ModulesSection from './components/ModulesSection';
@@ -28,7 +27,6 @@ function App() {
         <PhilosophicalOpenerSection />
         <CrossroadsSection />
         <DataRichnessSection />
-        <AIVisualizerSection />
         <SystemArchitectsSection />
         <SocraticMethodSection />
         <ModulesSection />

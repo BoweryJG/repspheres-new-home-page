@@ -57,11 +57,11 @@ const getNavLinks = (currentUrl, isAdmin) => {
   const links = [
     { 
       key: 'insights',
-      label: 'Market Insights', 
-      href: 'https://marketdata.repspheres.com/',
+      label: 'AI Visualizer', 
+      href: 'https://aime.netlify.app/',
       icon: <InsightsIcon fontSize="small" sx={{ color: ACCENT_COLOR }} />,
       highlight: true,
-      description: 'Real-time market intelligence'
+      description: 'AI-powered aesthetic visualization'
     },
     { 
       key: 'workspace',
